@@ -3,12 +3,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { VotingOptions } from '@/components/poll/VotingOptions';
-import { VoteButton } from '@/components/poll/VoteButton';
 import { SuccessMessage } from '@/components/poll/SuccessMessage';
-import { ComicBackground } from '@/components/ComicBackground';
 import { Check, BarChart2, Users, Clock, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatDistanceToNow, format } from 'date-fns';
+
 export type Candidate = {
   id: string;
   name: string;
@@ -22,13 +22,14 @@ type Poll = {
   poll_id: string;
   poll_title: string;
   description: string;
-  poll_start: number;
-  poll_end: number;
+  poll_start: string;
+  poll_end: string;
   votes: number;
   creator_wallet_key: string;
   created_at: string;
   candidates: Candidate[];
   userVoted?: boolean;
+  isPollEnded: boolean;
 };
 
 export default function PollPage() {
@@ -48,6 +49,8 @@ export default function PollPage() {
 
   console.log("selected candidate from handle select ", selectedCandidate);
 
+
+
   useEffect(() => {
 //  fetching poll from API
     const fetchPoll = async () => {
@@ -56,7 +59,14 @@ export default function PollPage() {
         const res = await fetch(`/api/poll/${pollId}`);
         if (!res.ok) throw new Error('Failed to fetch poll');
         const data = await res.json();
-        setPoll(data);
+        const pollEnd = new Date(data.poll_end);
+        const localPollEnd = new Date(pollEnd.getTime() + (pollEnd.getTimezoneOffset() * 60000));
+        const isPollEnded = localPollEnd < new Date();
+        
+        setPoll({
+          ...data,
+          isPollEnded
+        });
       } catch (error) {
         console.error('Error loading poll:', error);
       } finally {
@@ -67,19 +77,21 @@ export default function PollPage() {
     fetchPoll();
   }, [pollId]);
 
-  const handleVote = () => {
+  const handleVote = useCallback(async () => {
     if (!selectedCandidate) return;
     console.log("selected candidate from handleVote ", selectedCandidate);
 
     setIsSubmitting(true);
-    console.log(selectedCandidate);
-    // Simulate vote (replace with actual Solana TX later)
-
-    setTimeout(() => {
+    try {
+      // Simulate vote (replace with actual Solana TX later)
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setHasVoted(true);
+    } catch (error) {
+      console.error('Error voting:', error);
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
-  };
+    }
+  }, [selectedCandidate]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -148,24 +160,11 @@ export default function PollPage() {
     );
   }
 
-  const totalVotes = poll.candidates.reduce((sum, c) => sum + c.votes, 0);
-
-  // -------- Poll Candidates --------
-  const candidates = poll.candidates.map((candidate) => ({
-    id: candidate.id.toString(),
-    poll_id: candidate.poll_id,
-    name: candidate.name,
-    votes: candidate.votes,
-    percentage: totalVotes ? Math.round((candidate.votes / totalVotes) * 100) : 0,
-  }));
-
 
   // -------- Poll Metadata --------
-  const pollEndsInMs = poll.poll_end - Date.now();
-  const pollEndsText =
-    pollEndsInMs > 0
-      ? `${Math.floor(pollEndsInMs / (1000 * 60 * 60))}h left`
-      : 'Ended';
+  const pollEnd = new Date(poll.poll_end);
+  const localPollEnd = new Date(pollEnd.getTime() + (pollEnd.getTimezoneOffset() * 60000));
+  const pollEndsInMs = formatDistanceToNow(localPollEnd, { addSuffix: true });
 
   return (
     <div className="min-h-screen  pt-16 bg-gray-50 relative overflow-x-hidden">
@@ -176,7 +175,7 @@ export default function PollPage() {
 
         <div className="mb-8 bg-white p-6 rounded-lg border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
           <div className="flex flex-col space-y-4">
-            <h1 className="text-3xl font-black text-gray-900 font-comic">{poll.poll_title}</h1>
+            <h1 className="text-3xl font-black text-gray-900 ">{poll.poll_title}</h1>
 
             {/* Enhanced Description */}
 
@@ -203,58 +202,52 @@ export default function PollPage() {
               </div>
               <div className="flex items-center bg-purple-50 px-3 py-1.5 rounded-full border border-purple-200">
                 <Clock className="w-4 h-4 mr-2 text-purple-500" />
-                <span>Ends in {pollEndsText}</span>
-              </div>
-              <div className="flex items-center bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
-                <BarChart2 className="w-4 h-4 mr-2 text-green-500" />
-                <span>{totalVotes} total votes</span>
+                <span>{pollEndsInMs}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Poll Content */}
+        {/* Voting Options */}
         <div className="bg-white p-6 rounded-lg border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-          {!hasVoted  ? (
+          {poll.isPollEnded ? (
             <>
               <VotingOptions
-                candidates={candidates}
+                candidates={poll.candidates}
                 selectedCandidate={selectedCandidate}
-                onSelect={handleSelect}
-                showResults={false}
+                onSelect={() => {}}
+                showResults={true}
               />
-
-              <div className="mt-8">
-                <VoteButton
-                  isSubmitting={isSubmitting}
-                  isSelected={!!selectedCandidate}
-                  onClick={handleVote}
-                >
-                  Submit Vote
-                </VoteButton>
-              </div>
             </>
           ) : (
             <>
-              <SuccessMessage />
-              <div className="mt-8">
-                <VotingOptions
-                  candidates={candidates}
-                  selectedCandidate={selectedCandidate}
-                  onSelect={() => {}}
-                  showResults={true}
-                />
-              </div>
-
-              <div className="mt-8 text-center">
-                <button
-                  onClick={copyToClipboard}
-                  className="inline-flex items-center gap-2 px-6 py-2 bg-blue-100 text-blue-800 font-bold rounded-md border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] transition-all"
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span>Share Poll</span>
-                </button>
-              </div>
+              {!hasVoted ? (
+                <>
+                  <VotingOptions
+                    candidates={poll.candidates}
+                    selectedCandidate={selectedCandidate}
+                    onSelect={handleSelect}
+                    showResults={false}
+                  />
+                  <div className="mt-8">
+                    <button
+                      onClick={handleVote}
+                      disabled={!selectedCandidate || isSubmitting}
+                      className={`w-full px-8 py-3 rounded-lg font-semibold transition-all ${
+                        isSubmitting
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : selectedCandidate
+                          ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                          : 'bg-gray-300 cursor-not-allowed'
+                      }`}
+                    >
+                      {isSubmitting ? 'Submitting...' : 'Submit Vote'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <SuccessMessage />
+              )}
             </>
           )}
         </div>

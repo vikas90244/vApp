@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Clock, ArrowRight, BarChart2, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { apiService } from '@/lib/api.service';
+import { formatDistanceToNow, format } from 'date-fns';
 export type Candidate = {
   id: string;
   name: string;
@@ -17,13 +18,14 @@ export type Poll = {
   poll_id: string;
   poll_title: string;
   description: string;
-  poll_start: number;
-  poll_end: number;
+  poll_start: string;
+  poll_end: string;
   votes: number;
   creator_wallet_key: string;
   created_at: string;
   candidates: Candidate[];
   userVoted?: boolean;
+  isPollEnded?: boolean;
 };
 
 const getOptionColor = (percentage: number) => {
@@ -39,19 +41,13 @@ export const PollCard = ({ poll, onPollDeleted }: { poll: Poll, onPollDeleted: (
   const maxVisibleOptions = 3;
   const hasMoreOptions = poll.candidates.length > maxVisibleOptions;
   const totalVotes = poll.candidates.reduce((sum, c) => sum + c.votes, 0);
-  const now = Date.now();
-  const timeLeftMs = poll.poll_end - now;
 
-  const timeLeft = (() => {
-    if (timeLeftMs <= 0) return 'Ended';
-
-    const hoursLeft = Math.floor(timeLeftMs / (1000 * 60 * 60));
-    if (hoursLeft >= 1) return `${hoursLeft}h left`;
-
-    const minutesLeft = Math.floor(timeLeftMs / (1000 * 60));
-    return `${minutesLeft}m left`;
-  })();
-
+  const pollEnd = new Date(poll.poll_end);
+  const localPollEnd = new Date(pollEnd.getTime() + (pollEnd.getTimezoneOffset() * 60000));
+  const isPollEnded = poll.isPollEnded ?? localPollEnd < new Date();
+  const timeDisplay = isPollEnded 
+    ? formatDistanceToNow(localPollEnd, { addSuffix: true, includeSeconds: true })
+    : formatDistanceToNow(localPollEnd, { addSuffix: true });
 
   const visibleOptions = (showAllOptions
     ? poll.candidates
@@ -72,11 +68,11 @@ export const PollCard = ({ poll, onPollDeleted }: { poll: Poll, onPollDeleted: (
       const response = await fetch(`/api/delete-poll/${pollId}/`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete poll');
       }
-      
+
       onPollDeleted(pollId);
     } catch (err) {
       console.error('Error deleting poll:', err);
@@ -100,7 +96,7 @@ export const PollCard = ({ poll, onPollDeleted }: { poll: Poll, onPollDeleted: (
           </div>
           <div className="flex items-center bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
             <Clock className="w-4 h-4 mr-1.5 text-purple-500" />
-            <span>{timeLeft}</span>
+            <span>{timeDisplay}</span>
           </div>
         </div>
       </div>
@@ -154,20 +150,20 @@ export const PollCard = ({ poll, onPollDeleted }: { poll: Poll, onPollDeleted: (
           href={`/poll/${poll.poll_id}`}
           className="flex items-center px-4 py-2 bg-black text-white font-bold rounded-md border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-800 transition-all hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
         >
-          {poll.userVoted || poll.poll_end < Date.now() ? 'View Results' : 'Vote'}
+          {poll.userVoted || isPollEnded ? 'View Results' : 'Vote'}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Link>
 
 
 
-        {poll.creator_wallet_key === wallet.publicKey?.toBase58() && (
+        {wallet.publicKey?.toString() === poll.creator_wallet_key && !isPollEnded && (
           <button
-            onClick={()=> handleDeletePoll(poll.poll_id)}
-            className="ml-3 flex items-center px-4 py-2 bg-red-600 text-white font-bold rounded-md border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-red-700 transition-all hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            onClick={() => handleDeletePoll(poll.poll_id)}
+            className="text-sm px-4 py-2 bg-red-600 text-white font-bold rounded-md border-2 border-red-600 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-red-700 transition-all hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
           >
-            Delete 
-          </button>)
-        }
+            Delete
+          </button>
+        )}
       </div>
     </div>
   );

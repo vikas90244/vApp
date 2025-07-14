@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import * as Yup from "yup";
 import { Formik, Form, FormikHelpers } from "formik";
 import { Rocket, CheckCircle, AlertCircle } from "lucide-react";
@@ -57,6 +58,7 @@ const initialValues: PollFormValues = {
 };
 
 function PollForm() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -82,7 +84,8 @@ function PollForm() {
     });
 
     setSubmitSuccess(true);
-    setTimeout(() => setSubmitSuccess(false), 3000);
+    // Redirect to explore page after successful submission
+    router.push('/explore');
   } catch (error) {
     console.error("Error deploying poll:", error);
     setSubmitError("Failed to deploy poll. Please try again!");
