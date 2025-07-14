@@ -1,6 +1,6 @@
 # vApp Monorepo
 
-This repository contains all components of the vApp project, organized as a monorepo.
+This repository contains all components of the vApp project, organized as a single monorepo.
 
 ## Project Structure
 
@@ -14,19 +14,25 @@ vApp/
 
 ## Setup Instructions
 
-1. Install dependencies:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/vikas90244/vApp.git
+   cd vApp
+   ```
+
+2. Install dependencies:
    ```bash
    # Install root dependencies
    yarn install
 
    # Install frontend dependencies
-   cd frontend && yarn install
+   cd frontend && npm install
 
    # Install booth dependencies
-   cd ../booth && yarn install
+   cd ../booth && cargo build
 
    # Install booth backend dependencies
-   cd ../booth_backend && cargo install
+   cd ../booth_backend && python -m venv env && source env/bin/activate && python manage.py runserver 
    ```
 
 2. Set up environment variables:
