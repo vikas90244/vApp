@@ -4,8 +4,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
+from django.db.models import F
 from .models import Poll, Candidate
-from .serializers import PollSerializer , CandidateSerializer
+from .serializers import PollSerializer, CandidateSerializer
 # Create your views here.
 
 
@@ -98,3 +99,34 @@ class PollDeleteView(APIView):
                 {"message": "Internal server error"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class VoteCandidateView(APIView):
+    def post(self, request, candidate_id):
+        try:
+            candidate = Candidate.objects.get(pk=candidate_id)
+            candidate.votes += 1
+            candidate.save()
+            
+            # Update the poll's total votes
+            Poll.objects.filter(poll_id=candidate.poll_id).update(votes=F('votes') + 1)
+            
+            return Response({
+                "message": "Vote recorded successfully",
+                "candidate_id": candidate.id,
+                "updated_votes": candidate.votes,
+                "poll_id": candidate.poll_id
+            }, status=status.HTTP_200_OK)
+            
+        except Candidate.DoesNotExist:
+            return Response(
+                {"error": "Candidate not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print(f"Error recording vote: {str(e)}")
+            return Response(
+                {"error": "Internal server error"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+

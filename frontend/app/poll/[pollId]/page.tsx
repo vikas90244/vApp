@@ -83,11 +83,24 @@ export default function PollPage() {
 
     setIsSubmitting(true);
     try {
-      // Simulate vote (replace with actual Solana TX later)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`/api/vote/${selectedCandidate.id}/`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to record vote');
+      }
+
+      const data = await response.json();
+      console.log('Vote recorded:', data);
       setHasVoted(true);
+      
+      // Optionally update the UI with the new vote count
+      // You might want to refetch the poll data here
     } catch (error) {
       console.error('Error voting:', error);
+      // Handle error in your UI
     } finally {
       setIsSubmitting(false);
     }

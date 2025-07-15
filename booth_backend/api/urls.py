@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PollCreateView, PollsByWalletKeyView, PollDetailView, AllPollsView, PollDeleteView
+from .views import PollCreateView, PollsByWalletKeyView, PollDetailView, AllPollsView, PollDeleteView, VoteCandidateView
 
 
 urlpatterns = [
@@ -8,4 +8,5 @@ urlpatterns = [
     path('polls/<str:poll_id>/', PollDetailView.as_view(), name='poll_detail'),
     path('polls/', AllPollsView.as_view(), name='all_polls'),
     path('polls/delete/<str:poll_id>/', PollDeleteView.as_view(), name='delete_poll'),
+    path('candidates/<int:candidate_id>/vote/', VoteCandidateView.as_view(), name='vote_candidate'),
 ]
