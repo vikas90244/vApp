@@ -1,6 +1,6 @@
 # 🗳️ vApp - Decentralized Voting Platform
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 [![Next.js](https://img.shields.io/badge/Next.js-13.4+-000000?logo=next.js)](https://nextjs.org/)
 [![Django](https://img.shields.io/badge/Django-4.2-092E20?logo=django)](https://www.djangoproject.com/)
 [![Solana](https://img.shields.io/badge/Solana-14F195?logo=solana&logoColor=white)](https://solana.com/)
@@ -100,24 +100,8 @@ vApp is a decentralized voting platform built on the Solana blockchain, featurin
    - Backend API: http://localhost:8000/api
    - Admin Panel: http://localhost:8000/admin
 
-### Environment Variables
 
-Create `.env` files in each directory with the following variables:
 
-**Frontend (frontend/.env.local)**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_SOLANA_NETWORK=devnet
-NEXT_PUBLIC_PROGRAM_ID=YOUR_PROGRAM_ID
-```
-
-**Backend (booth_backend/.env)**
-```env
-DEBUG=True
-SECRET_KEY=your-secret-key
-DATABASE_URL=sqlite:///db.sqlite3
-ALLOWED_HOSTS=localhost,127.0.0.1
-```
 
 ## 🧪 Testing
 
@@ -139,19 +123,10 @@ yarn test
 2. Configure environment variables
 3. Deploy your Django application
 
-## 📚 Documentation
-
-- [API Documentation](/docs/API.md)
-- [Smart Contract Documentation](/docs/SMART_CONTRACTS.md)
-- [Frontend Architecture](/docs/FRONTEND.md)
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
