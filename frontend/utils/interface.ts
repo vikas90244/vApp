@@ -1,5 +1,5 @@
 export interface Candidate {
-    name: String
+    name: string
 }
 
 export interface PollFormValues {

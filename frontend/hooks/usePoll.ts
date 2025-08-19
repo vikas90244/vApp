@@ -70,7 +70,7 @@ export const usePoll = () => {
         .accounts({
           signer: wallet.publicKey,
           poll: pollAccountPDA,
-          systemProgram: SystemProgram.programId,
+          system_program: SystemProgram.programId,
         })
 
         .instruction();

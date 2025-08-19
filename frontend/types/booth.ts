@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/booth.json`.
  */
 export type Booth = {
-  "address": "412xBQyi1GemTVD5scmBspRRHroh154DNZcAcJeay2or",
+  "address": "GxfuGtEM9fW6NMKyY5NoPqSYLbHpRbrLcJdZFxk2Lvcu",
   "metadata": {
     "name": "booth",
     "version": "0.1.0",

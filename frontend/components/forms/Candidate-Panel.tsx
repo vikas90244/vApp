@@ -3,11 +3,14 @@ import { Field, FieldArray, ErrorMessage } from 'formik'
 import { Users, X, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Candidate } from "@/utils/interface"
 
-interface CandidatePanelProps{
-    values:any;
-    errors:any;
-    touched:any;
+interface CandidatePanelProps {
+  values: {
+    candidates: Candidate[];
+  };
+  errors: any;
+  touched: any;
 }
 function CandidatePanel({values,errors,touched}:CandidatePanelProps) {
   return (
@@ -32,7 +35,7 @@ function CandidatePanel({values,errors,touched}:CandidatePanelProps) {
         <FieldArray name="candidates">
           {({ push, remove }) => (
             <>
-              {values.candidates.map((candidate, index) => (
+              {values.candidates.map((candidate: Candidate, index: number) => (
                 <div
                   key={index}
                   className="flex items-center gap-4 p-4 border-4 border-black bg-gray-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-shadow"
