@@ -67,10 +67,9 @@ export const usePoll = () => {
           pollEndUnix,
         )
 
-        .accounts({
+        .accountsPartial({
           signer: wallet.publicKey,
           poll: pollAccountPDA,
-          system_program: SystemProgram.programId,
         })
 
         .instruction();
@@ -96,11 +95,10 @@ export const usePoll = () => {
             candidateName,
             pollId,
           )
-          .accounts({
+          .accountsPartial({
             signer: wallet.publicKey,
             poll: pollAccountPDA,
             candidate: candidateAccountPDA,
-            systemProgram: SystemProgram.programId,
           })
 
           .instruction();
