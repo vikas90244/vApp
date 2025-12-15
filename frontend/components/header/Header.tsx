@@ -61,7 +61,7 @@ function Header() {
         isScrolled ? 'py-1' : 'py-2'
       )}
     >
-      <div className="container mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between py-2">
           {/* Logo */}
           <Link
@@ -71,9 +71,9 @@ function Header() {
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-400 border-2 border-black rounded-md shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] rotate-[-6deg] flex items-center justify-center">
               <Vote className="w-4 h-4 sm:w-6 sm:h-6 text-black" strokeWidth={2.5} />
             </div>
-            <h1 className="text-lg sm:text-2xl font-black text-black leading-tight whitespace-nowrap">
-              DECENTRALIZED <span className="hidden sm:inline">DECISIONS</span>
-              <span className="sm:hidden">DECISIONS</span>
+            <h1 className="text-base sm:text-2xl font-black text-black leading-tight whitespace-nowrap truncate">
+              <span className="hidden sm:inline">DECENTRALIZED </span>
+              <span className="inline">DECISIONS</span>
             </h1>
           </Link>
 
@@ -125,10 +125,10 @@ function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+          {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t-2 border-black py-4 px-4">
-          <div className="flex flex-col space-y-3">
+        <div className="md:hidden bg-white border-t-2 border-black py-4 px-4 fixed inset-x-0 top-[64px] z-40">
+          <div className="flex flex-col space-y-3 max-h-[60vh] overflow-auto">
             <NavLink href="/explore" icon={Compass} mobile>
               Explore
             </NavLink>

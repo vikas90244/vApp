@@ -28,9 +28,9 @@ export default function RootLayout({
   return (
     // Apply the Geist font variables
     <html lang="en" className={`${inter.variable}`}>
-      <body className='min-h-screen bg-gray-50  z-10'>
-          {/* Background with pulsive triangle and bounce squares */}
-      <div className='fixed inset-0 pointer-events-none overflow-hidden'>
+    <body className='min-h-screen bg-gray-50  z-10'>
+      {/* Background with pulsive triangle and bounce squares - hidden on small screens to reduce clutter */}
+    <div className='hidden sm:block fixed inset-0 pointer-events-none overflow-hidden'>
         <div className='absolute top-20 left-10 w-0 h-0 border-l-[25px] border-l-transparent border-r-[25px] border-r-transparent  border-b-[35px] border-b-yellow-400 rotate-12 animate-pulse'></div>
         <div className="absolute top-40 right-20 w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-b-[30px] border-b-purple-500 -rotate-45"></div>
         <div className='absolute bottom-32 left-32 w-8 h-8 bg-blue-500 rotate-45 animate-bounce'></div>
@@ -44,7 +44,7 @@ export default function RootLayout({
       <div className="absolute top-1/4 left-0 w-full h-1 bg-black transform -skew-y-12"></div>
       <div className="absolute top-1/2 left-0 w-full h-1 bg-black transform -skew-y-12"></div>
       <div className="absolute top-3/4 left-0 w-full h-1 bg-black transform -skew-y-12"></div>
-      </div>
+  </div>
       </div>
       <SolanaWalletProvider>
           <Header />
