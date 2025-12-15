@@ -81,6 +81,47 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Responsive typography: reduce base font-size on small screens so Tailwind text-* scales down automatically.
+   This keeps the theme/colors but makes the UI denser and more readable on phones. */
+html {
+  font-size: 16px; /* default desktop */
+}
+
+@media (max-width: 768px) {
+  /* tablets and phones */
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  /* small phones */
+  html {
+    font-size: 13px;
+  }
+  /* Slightly tighter line-height on very small screens */
+  body {
+    line-height: 1.25;
+  }
+}
+
+/* Make images and embedded media scale down on small viewports */
+img, svg, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Buttons/inputs: slightly smaller on phones for denser UI */
+button, input, select, textarea {
+  font-size: 0.95rem;
+}
+
+@media (max-width: 420px) {
+  button, input, select, textarea {
+    font-size: 0.875rem;
+  }
+}
+
 /* Apply custom style to the wallet button via ::part */
 wallet-multi-button::part(button) {
   background-color: #1f2937; /* same as bg-gray-800 */

@@ -61,24 +61,24 @@ function Header() {
         isScrolled ? 'py-1' : 'py-2'
       )}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between py-2">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6">
+        <div className="flex items-center justify-between py-2 md:py-3 lg:py-4">
           {/* Logo */}
           <Link
             href="/"
             className="flex items-center gap-2 hover:scale-105 transition-transform duration-300"
           >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-400 border-2 border-black rounded-md shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] rotate-[-6deg] flex items-center justify-center">
-              <Vote className="w-4 h-4 sm:w-6 sm:h-6 text-black" strokeWidth={2.5} />
+            <div className="w-8 h-8 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-yellow-400 border-2 border-black rounded-md shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] rotate-[-6deg] flex items-center justify-center">
+              <Vote className="w-4 h-4 md:w-6 md:h-6 lg:w-7 lg:h-7 text-black" strokeWidth={2.5} />
             </div>
-            <h1 className="text-base sm:text-2xl font-black text-black leading-tight whitespace-nowrap truncate">
-              <span className="hidden sm:inline">DECENTRALIZED </span>
+            <h1 className="text-base md:text-xl lg:text-2xl font-black text-black leading-tight whitespace-nowrap truncate">
+              <span className="hidden md:inline">DECENTRALIZED </span>
               <span className="inline">DECISIONS</span>
             </h1>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-3 md:gap-4 lg:gap-6">
             <NavLink href="/explore" icon={Compass}>
               Explore
             </NavLink>
@@ -91,7 +91,7 @@ function Header() {
           </nav>
 
           {/* Network + Wallet - Desktop */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-3">
             <button
               onClick={() =>
                 setNetwork(network === 'devnet' ? 'localnet' : 'devnet')
