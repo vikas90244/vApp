@@ -1,9 +1,10 @@
 // api.service.ts
 import { Poll } from "@/components/poll/PollCard";
+import { BACKEND_URL } from "@/config";
 
 
 class ApiService {
-    private BASE_URL = "http://localhost:3000/api";
+    private BASE_URL = BACKEND_URL;
 
     private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
         const response = await fetch(`${this.BASE_URL}/${endpoint}/`, {
