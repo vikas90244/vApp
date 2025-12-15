@@ -61,7 +61,7 @@ function Header() {
         isScrolled ? 'py-1' : 'py-2'
       )}
     >
-      <div className="max-w-6xl mx-auto px-3 sm:px-6">
+      <div className="mx-auto px-3 sm:px-6">
         <div className="flex items-center justify-between py-2 md:py-3 lg:py-4">
           {/* Logo */}
           <Link
@@ -78,7 +78,7 @@ function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-3 md:gap-4 lg:gap-6">
+          <nav className="hidden md:flex items-center gap-3  md:gap-4 lg:gap-6">
             <NavLink href="/explore" icon={Compass}>
               Explore
             </NavLink>
