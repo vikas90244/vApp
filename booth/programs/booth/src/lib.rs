@@ -7,7 +7,7 @@ pub use states::*;
 use handlers::poll_handler::*;
 use handlers::candidate_handler::*;
 use handlers::vote_handler::*;
-declare_id!("412xBQyi1GemTVD5scmBspRRHroh154DNZcAcJeay2or");
+declare_id!("CahoJqP45XiXju2xgj5nCKHEhbYJJmCU19X78sfpJEhr");
 
 #[program]
 pub mod booth {

@@ -8,12 +8,18 @@ skip-lint = false
 [programs.localnet]
 booth = "412xBQyi1GemTVD5scmBspRRHroh154DNZcAcJeay2or"
 
+[programs.devnet]
+booth = "CahoJqP45XiXju2xgj5nCKHEhbYJJmCU19X78sfpJEh"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
+
+[test.validator]
+url = "https://api.devnet.solana.com"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
