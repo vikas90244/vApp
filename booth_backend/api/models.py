@@ -27,3 +27,24 @@ class Candidate(models.Model):
 
     def __str__(self):
         return f"{self.name} (for poll {self.poll.poll_id})"
+
+
+class Vote(models.Model):
+    id = models.AutoField(primary_key=True)
+    poll = models.ForeignKey(
+        Poll,
+        to_field="poll_id",
+        db_column="poll_id",
+        on_delete=models.CASCADE,
+        related_name="votes_records",
+    )
+    # Use a non-conflicting related_name so it doesn't clash with Candidate.votes (an IntegerField)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name="vote_records")
+    voter_pubkey = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (('poll', 'voter_pubkey'),)
+
+    def __str__(self):
+        return f"Vote by {self.voter_pubkey} on poll {self.poll.poll_id} -> {self.candidate.name}"

@@ -3,9 +3,12 @@ from .models import Poll, Candidate
 
 
 class CandidateSerializer(serializers.ModelSerializer):
+    # include poll_id so frontend can reconstruct on-chain PDAs
+    poll_id = serializers.CharField(source='poll.poll_id', read_only=True)
+
     class Meta:
         model = Candidate
-        fields = ['id', 'name', 'votes']
+        fields = ['id', 'name', 'votes', 'poll_id']
 
 class PollSerializer(serializers.ModelSerializer):
     candidates = CandidateSerializer(many=True,)

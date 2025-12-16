@@ -18,7 +18,8 @@ export const usePoll = () => {
       const { network } = useNetwork();
       const program = getBoothProgram(provider);
       const programId = getBoothProgramId(network);
-
+      console.log("programId", programId);
+      console.log("Progra id from program: ", program.programId);
 
   const deployPollSolana = useMutation({
     mutationFn: async (data: PollFormValues) => {

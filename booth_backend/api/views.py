@@ -104,21 +104,53 @@ class PollDeleteView(APIView):
 class VoteCandidateView(APIView):
     def post(self, request, candidate_id):
         try:
+            print(f"VoteCandidateView: received POST for candidate_id={candidate_id} body={request.data}")
             candidate = Candidate.objects.get(pk=candidate_id)
-            candidate.votes += 1
-            candidate.save()
-            
-            # Update the poll's total votes
-            Poll.objects.filter(poll_id=candidate.poll_id).update(votes=F('votes') + 1)
-            
+
+            # Expect voter_pubkey in the request body to prevent duplicate backend votes
+            voter_pubkey = request.data.get('voter_pubkey')
+            if not voter_pubkey:
+                print("VoteCandidateView: missing voter_pubkey in request")
+                return Response({'error': 'voter_pubkey is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if this voter already voted on this poll
+            from .models import Vote
+            poll = candidate.poll
+
+            # Use a DB transaction to avoid race conditions
+            from django.db import transaction, IntegrityError
+            try:
+                with transaction.atomic():
+                    # If a Vote for this poll and voter already exists, IntegrityError or exists() will prevent duplicate
+                    if Vote.objects.filter(poll=poll, voter_pubkey=voter_pubkey).exists():
+                        print(f"VoteCandidateView: voter {voter_pubkey} already voted on poll {poll.poll_id}")
+                        return Response({'error': 'Already voted'}, status=status.HTTP_400_BAD_REQUEST)
+
+                    Vote.objects.create(poll=poll, candidate=candidate, voter_pubkey=voter_pubkey)
+
+                    # Increment candidate votes and poll votes atomically using QuerySet.update() to avoid
+                    # leaving an F() expression on the model instance which can be confusing until refresh_from_db()
+                    Candidate.objects.filter(pk=candidate.pk).update(votes=F('votes') + 1)
+
+                    # Ensure we update the Poll using the poll.poll_id value (stable)
+                    Poll.objects.filter(poll_id=poll.poll_id).update(votes=F('votes') + 1)
+
+            except IntegrityError as ie:
+                print(f"VoteCandidateView: IntegrityError when creating vote: {ie}")
+                return Response({'error': 'Already voted'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Refresh candidate from DB to get the updated integer value
+            candidate.refresh_from_db()
+
             return Response({
                 "message": "Vote recorded successfully",
                 "candidate_id": candidate.id,
                 "updated_votes": candidate.votes,
-                "poll_id": candidate.poll_id
+                "poll_id": poll.poll_id
             }, status=status.HTTP_200_OK)
-            
+
         except Candidate.DoesNotExist:
+            print(f"VoteCandidateView: candidate {candidate_id} not found")
             return Response(
                 {"error": "Candidate not found"}, 
                 status=status.HTTP_404_NOT_FOUND

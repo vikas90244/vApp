@@ -9,4 +9,6 @@ urlpatterns = [
     path('polls/', AllPollsView.as_view(), name='all_polls'),
     path('polls/delete/<str:poll_id>/', PollDeleteView.as_view(), name='delete_poll'),
     path('candidates/<int:candidate_id>/vote/', VoteCandidateView.as_view(), name='vote_candidate'),
+    # alternate shorter route kept for compatibility with older frontend calls
+    path('vote/<int:candidate_id>/', VoteCandidateView.as_view(), name='vote_candidate_short'),
 ]

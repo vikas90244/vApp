@@ -43,6 +43,15 @@ function VotingOptionsComponent({
       await Promise.all(
         candidates.map(async (candidate) => {
           try {
+            if (!candidate.poll_id) {
+              console.error('Missing poll_id for candidate:', candidate.id);
+              return;
+            }
+            if (!candidate.name) {
+              console.error('Missing name for candidate:', candidate.id);
+              return;
+            }
+            
             const pollIdBuffer = Buffer.from(candidate.poll_id, 'hex');
             const [candidatePDA] = PublicKey.findProgramAddressSync(
               [pollIdBuffer, Buffer.from(candidate.name)],
@@ -50,10 +59,10 @@ function VotingOptionsComponent({
             );
 
             const candidateAccount = await program.account.candidate.fetch(candidatePDA);
-            console.log("candidateAccount is : ", candidateAccount)
+            console.log("candidateAccount for", candidate.name, ":", candidateAccount);
             votesMap[candidate.id] = candidateAccount.candidateVotes.toNumber();
           } catch (err) {
-            console.error("Failed to fetch candidate votes for", candidate.name, err);
+            console.error("Failed to fetch candidate votes for", candidate.name || candidate.id, err);
           }
         })
       );

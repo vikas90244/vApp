@@ -9,7 +9,7 @@ skip-lint = false
 booth = "412xBQyi1GemTVD5scmBspRRHroh154DNZcAcJeay2or"
 
 [programs.devnet]
-booth = "CahoJqP45XiXju2xgj5nCKHEhbYJJmCU19X78sfpJEh"
+booth = "CahoJqP45XiXju2xgj5nCKHEhbYJJmCU19X78sfpJEhr"
 
 [registry]
 url = "https://api.apr.dev"

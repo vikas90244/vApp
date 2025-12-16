@@ -1,6 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useVote } from '@/hooks/useVote';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { getBoothProgram } from '@/utils/anchor';
+import { AnchorProvider } from '@coral-xyz/anchor';
+import { PublicKey } from '@solana/web3.js';
 import { useParams } from 'next/navigation';
 import { VotingOptions } from '@/components/poll/VotingOptions';
 import { SuccessMessage } from '@/components/poll/SuccessMessage';
@@ -35,19 +40,22 @@ type Poll = {
 export default function PollPage() {
 
   const { pollId } = useParams() as { pollId: string };
-  console.log("pollId page is re-rendering, fix me first ");
   const [poll, setPoll] = useState<Poll | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading ]= useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [votingError, setVotingError] = useState<string | null>(null);
+  const [votingErrorDetails, setVotingErrorDetails] = useState<string | null>(null);
+  const { voteSolana, createBackendVote } = useVote();
+  const { connection } = useConnection();
+  const wallet: any = useWallet();
 
   const handleSelect = useCallback((candidate:Candidate) => {
     setSelectedCandidate(candidate);
   }, []);
 
-  console.log("selected candidate from handle select ", selectedCandidate);
 
 
 
@@ -63,9 +71,43 @@ export default function PollPage() {
         const localPollEnd = new Date(pollEnd.getTime() + (pollEnd.getTimezoneOffset() * 60000));
         const isPollEnded = localPollEnd < new Date();
         
+        // Try to fetch on-chain candidate counts and merge them into backend data
+        try {
+          const provider = new AnchorProvider(connection, wallet, {});
+          const program = getBoothProgram(provider);
+          const pollIdBytes = Buffer.from(data.poll_id, 'hex');
+
+          for (const c of data.candidates) {
+            try {
+              const [candidatePDA] = PublicKey.findProgramAddressSync([
+                Buffer.from(pollIdBytes),
+                Buffer.from(c.name),
+              ], program.programId);
+              const onChain = await program.account.candidate.fetch(candidatePDA);
+              // onChain candidate account fields may be snake_case (candidate_votes) or camelCase (candidateVotes)
+              let onChainVotes = 0;
+              if (onChain) {
+                const anyOn = onChain as any;
+                const votesField = anyOn.candidate_votes ?? anyOn.candidateVotes ?? anyOn.candidate_votes ?? anyOn.candidateVotes;
+                if (votesField && typeof votesField.toNumber === 'function') {
+                  onChainVotes = votesField.toNumber();
+                } else {
+                  onChainVotes = Number(votesField ?? 0);
+                }
+              }
+              c.votes = typeof onChainVotes === 'number' && !isNaN(onChainVotes) ? onChainVotes : c.votes;
+            } catch (err) {
+              // If account not found or error, keep backend value and continue
+              console.warn('Failed to fetch on-chain candidate for', c.name, err);
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to load on-chain counts (continuing with backend values):', err);
+        }
+
         setPoll({
           ...data,
-          isPollEnded
+          isPollEnded,
         });
       } catch (error) {
         console.error('Error loading poll:', error);
@@ -81,30 +123,52 @@ export default function PollPage() {
     if (!selectedCandidate) return;
     console.log("selected candidate from handleVote ", selectedCandidate);
 
+    setVotingError(null);
     setIsSubmitting(true);
-    try {
-      const response = await fetch(`/api/vote/${selectedCandidate.id}/`, {
-        method: 'POST',
+    
+      try {
+      // First perform on-chain vote which will create the voter PDA
+      await voteSolana.mutateAsync({
+        pollId: selectedCandidate.poll_id,
+        candidateName: selectedCandidate.name,
+          candidateId: selectedCandidate.id,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to record vote');
-      }
-
-      const data = await response.json();
-      console.log('Vote recorded:', data);
+      // Mark as voted (on-chain vote succeeded)
       setHasVoted(true);
-      
-      // Optionally update the UI with the new vote count
-      // You might want to refetch the poll data here
-    } catch (error) {
+
+      // Then record vote in backend (if this fails we still keep hasVoted true but show an error)
+        try {
+          // Pass voter pubkey from wallet explicitly to backend
+          const voter_pubkey = wallet?.publicKey?.toBase58();
+          await createBackendVote.mutateAsync({ candidateId: selectedCandidate.id, voter_pubkey });
+        } catch (err: any) {
+          console.error('Backend vote failed:', err);
+          setVotingError('Vote recorded on-chain but failed to update the backend.');
+        }
+    } catch (error: any) {
       console.error('Error voting:', error);
-      // Handle error in your UI
+      
+      if (error?.message) {
+        if (error.message.includes('Already voted')) {
+          setVotingError('You have already voted in this poll.');
+          setHasVoted(true);
+        } else if (error.message.includes('Wallet not connected')) {
+          setVotingError('Please connect your wallet to vote.');
+        } else if (error.message.includes('Program not loaded')) {
+          setVotingError('Error initializing voting program. Please try again.');
+        } else if (error.message.includes('Poll has not started yet')){
+          setVotingError("poll not started yet");
+        }
+        else {
+          setVotingError('An error occurred while processing your vote. Please try again.');
+        }
+      } else {
+        setVotingError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedCandidate]);
+  }, [selectedCandidate, voteSolana, createBackendVote]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -223,6 +287,12 @@ export default function PollPage() {
 
         {/* Voting Options */}
         <div className="bg-white p-6 rounded-lg border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+          {/* Global voting error banner (shows even if user already voted) */}
+          {votingError && (
+            <div className="mb-4 p-3 text-sm text-red-700 bg-red-50 rounded-lg border border-red-200">
+              {votingError}
+            </div>
+          )}
           {poll.isPollEnded ? (
             <>
               <VotingOptions
@@ -242,20 +312,34 @@ export default function PollPage() {
                     onSelect={handleSelect}
                     showResults={false}
                   />
-                  <div className="mt-8">
+                  <div className="mt-6 space-y-4">
                     <button
                       onClick={handleVote}
-                      disabled={!selectedCandidate || isSubmitting}
+                      disabled={!selectedCandidate || isSubmitting || hasVoted}
                       className={`w-full px-8 py-3 rounded-lg font-semibold transition-all ${
                         isSubmitting
                           ? 'bg-gray-400 cursor-not-allowed'
+                          : hasVoted
+                          ? 'bg-green-500 text-white cursor-not-allowed'
                           : selectedCandidate
                           ? 'bg-purple-500 hover:bg-purple-600 text-white'
                           : 'bg-gray-300 cursor-not-allowed'
                       }`}
                     >
-                      {isSubmitting ? 'Submitting...' : 'Submit Vote'}
+                      {isSubmitting ? 'Submitting...' : hasVoted ? 'Vote Submitted!' : 'Submit Vote'}
                     </button>
+                    
+                    {votingError && (
+                      <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+                        {votingError}
+                      </div>
+                    )}
+                    
+                    {hasVoted && (
+                      <div className="p-3 text-sm text-green-700 bg-green-50 rounded-lg border border-green-200">
+                        Your vote has been recorded successfully!
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
