@@ -20,6 +20,7 @@ type Network = Cluster | 'localnet';
 export function getBoothProgramId(cluster: Network) {
   switch (cluster) {
     case 'devnet':
+      return new PublicKey("CahoJqP45XiXju2xgj5nCKHEhbYJJmCU19X78sfpJEhr");
     case 'testnet':
       // This is the program ID for the Booth program on devnet and testnet.
       return new PublicKey('412xBQyi1GemTVD5scmBspRRHroh154DNZcAcJeay2or');

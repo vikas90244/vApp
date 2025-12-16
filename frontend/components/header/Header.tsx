@@ -142,7 +142,9 @@ function Header() {
             <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={() =>
-                  setNetwork(network === 'devnet' ? 'localnet' : 'devnet')
+                  setNetwork((prevNetwork) => 
+                    prevNetwork === 'devnet' ? 'localnet' : 'devnet'
+                  )
                 }
                 className={cn(
                   'px-3 py-2 font-bold border-2 border-black rounded-md shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]',
