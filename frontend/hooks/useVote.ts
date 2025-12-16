@@ -27,6 +27,14 @@ export const useVote = () => {
             try {
                 const { pollId, candidateName } = payload;
 
+                // Validate inputs early to avoid confusing Buffer errors later
+                if (!pollId) {
+                    throw new Error('pollId is required for on-chain voting. Ensure selectedCandidate.poll_id is provided and passed to useVote.');
+                }
+                if (!candidateName) {
+                    throw new Error('candidateName is required for on-chain voting.');
+                }
+
                 if (!wallet.publicKey) {
                     throw new Error("Wallet not connected");
                 }
@@ -35,7 +43,13 @@ export const useVote = () => {
                 }
 
                 // reconstruct pollId bytes (little-endian hex stored in backend)
-                const pollIdBytes = Buffer.from(pollId, "hex");
+                let pollIdBytes: Buffer;
+                try {
+                    pollIdBytes = Buffer.from(pollId, "hex");
+                } catch (bufErr: any) {
+                    // Re-throw with a clearer message about the expected shape
+                    throw new Error(`Failed to parse pollId hex string: ${String(bufErr)}. Received pollId=${String(pollId)}`);
+                }
 
                 // compute PDAs
                 const [pollPDA] = PublicKey.findProgramAddressSync(
