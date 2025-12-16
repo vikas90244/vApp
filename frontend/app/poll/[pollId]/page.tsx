@@ -105,6 +105,14 @@ export default function PollPage() {
           console.warn('Failed to load on-chain counts (continuing with backend values):', err);
         }
 
+        // Ensure every candidate has poll_id (some older records might be missing it)
+        if (Array.isArray(data.candidates)) {
+          data.candidates = data.candidates.map((c: any) => ({
+            ...c,
+            poll_id: c.poll_id ?? data.poll_id,
+          }));
+        }
+
         setPoll({
           ...data,
           isPollEnded,
